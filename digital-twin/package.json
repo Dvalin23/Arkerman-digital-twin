@@ -1,0 +1,26 @@
+{
+  "name": "ackermann-digital-twin",
+  "version": "1.0.0",
+  "description": "Browser-based digital twin of an Ackermann-steered rover: React + Three.js frontend, Node.js WebSocket backend with authoritative kinematics.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "server": "node server/index.js",
+    "dev": "vite",
+    "build": "vite build",
+    "build:standalone": "VITE_STANDALONE=1 vite build --outDir dist-standalone",
+    "start": "npm run build && node server/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.170.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.0"
+  },
+  "engines": { "node": ">=18" }
+}

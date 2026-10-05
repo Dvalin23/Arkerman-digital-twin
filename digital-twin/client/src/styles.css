@@ -1,4 +1,5 @@
-
+/* Layout: full-bleed 3D viewport; instrument panels float in the corners
+   like a test-track telemetry console, joystick bottom-right under the thumb. */
 :root {
   --bg: #0d1520;
   --panel: rgba(247, 250, 252, 0.9);
@@ -52,6 +53,7 @@
   color-scheme: dark;
 }
 
+
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
 body {
@@ -79,6 +81,30 @@ body {
 .hud-left { left: var(--gap); width: min(330px, calc(100% - 2 * var(--gap))); }
 .hud-right { right: var(--gap); width: min(280px, calc(100% - 2 * var(--gap))); align-items: flex-end; }
 .hud-left > *, .hud-right > * { pointer-events: auto; }
+.details { display: flex; flex-direction: column; gap: var(--gap); min-height: 0; }
+.controls { min-height: 0; }
+
+/* compact strip, phones only */
+.mini-hud {
+  display: none; align-items: center; gap: 8px; align-self: flex-start;
+  background: var(--panel); border: 1px solid var(--panel-line); border-radius: 999px;
+  box-shadow: var(--shadow); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  padding: 6px 6px 6px 12px; font: 500 13px/1 var(--font-data); font-variant-numeric: tabular-nums;
+  white-space: nowrap; max-width: 100%;
+}
+.mini-read { overflow: hidden; text-overflow: ellipsis; }
+.mini-read b { font: 600 17px/1 var(--font-display); }
+.mini-sep { color: var(--muted); margin: 0 5px; }
+.badge-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--muted); }
+.badge-dot.online { background: var(--ok); }
+.badge-dot.local { background: var(--accent); }
+.badge-dot.connecting, .badge-dot.idle { background: var(--link); }
+.badge-dot.offline { background: var(--danger); }
+.mini-toggle {
+  font: 600 11.5px/1 var(--font-ui); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 999px;
+  padding: 7px 11px; cursor: pointer; flex: none;
+}
 
 .panel {
   background: var(--panel);
@@ -243,19 +269,38 @@ button:focus-visible, input:focus-visible, .joystick:focus-visible { outline: 2p
 .joystick-label.bottom { bottom: 9px; }
 
 /* ---------- phones ---------- */
-@media (max-width: 760px) {
-  .hud-left { width: min(300px, calc(100% - 2 * var(--gap) - 110px)); }
-  .hud-right { width: auto; max-width: calc(100% - 2 * var(--gap)); }
-  .hud-right .controls { width: min(280px, calc(100vw - 2 * var(--gap))); }
-  .stats { grid-template-columns: repeat(2, 1fr); }
-  .brand p, .wheel-diagram { display: none; }
+@media (max-width: 760px), (max-height: 500px) {
+  /* keep the car visible: a slim strip top-left, a pill top-right, panels only on demand */
+  .hud-left, .hud-right { max-height: calc(100% - 2 * var(--gap) - 150px); }
+  .hud-left { width: calc(100% - 2 * var(--gap) - 118px); }
+  .hud-right { width: auto; }
+  .mini-hud { display: flex; }
+  .details:not(.open) { display: none; }
+  .details { overflow-y: auto; width: min(320px, calc(100vw - 2 * var(--gap))); }
+  .hud-right .controls { width: min(300px, calc(100vw - 2 * var(--gap))); }
+  .stats { grid-template-columns: repeat(4, 1fr); margin-top: 8px; }
+  .brand { display: none; }
+  .badge { display: none; }
+  .wheel-diagram { display: none; }
   .telemetry-body { grid-template-columns: 1fr; }
-  .speed-value { font-size: 40px; }
-  .panel { padding: 12px; }
-  .notice { max-width: calc(100% - 2 * var(--gap)); bottom: 190px; }
+  .speed { display: none; }
+  .panel { padding: 10px 12px; }
+  .panel-title { margin-bottom: 6px; }
+  .readouts dt, .readouts dd { font-size: 12px; }
+  .panel-toggle { padding: 8px 12px; }
+  .notice { max-width: calc(100% - 2 * var(--gap)); bottom: 160px; font-size: 12.5px; }
 }
-@media (max-width: 760px) and (orientation: portrait) {
-  .app:has(.controls) .hud-left { display: none; }
+@media (max-height: 500px) {
+  /* landscape phone: the joystick sits bottom-right, so the left column can use the full height */
+  .hud-left { max-height: calc(100% - 2 * var(--gap)); }
+}
+@media (max-width: 420px) {
+  .mini-steer { display: none; }
+}
+/* when the open panel would collide with the strip, give it the full width */
+@media (max-width: 760px), (max-height: 500px) {
+  .app:has(.hud-right .controls) .hud-left .details { display: none; }
+  .app:has(.hud-left .details.open) .hud-right .panel-toggle { opacity: 0.85; }
 }
 @media (prefers-reduced-motion: reduce) {
   .badge .dot, .tag.danger { animation: none; }

@@ -5,6 +5,7 @@ import { Engine } from './lib/engine.js';
 import { WsLink, LocalLink } from './lib/link.js';
 import { INPUT_HZ } from '../../shared/protocol.js';
 
+
 const ENV = import.meta.env || {};
 const STANDALONE = !!ENV.VITE_STANDALONE;
 
@@ -14,6 +15,8 @@ function defaultServerUrl() {
   if (ENV.DEV || !location.host) return `ws://${location.hostname || 'localhost'}:8080`;
   return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`;
 }
+
+const isPhone = () => window.matchMedia('(max-width: 760px), (max-height: 500px)').matches;
 
 const CAMERAS = [
   ['chase', 'Chase'],
@@ -40,7 +43,19 @@ export default function App() {
   const [camera, setCamera] = useState('chase');
   const [ackermann, setAckermann] = useState(1);
   const [latency, setLatency] = useState(60);
-  const [controlsOpen, setControlsOpen] = useState(() => window.innerWidth > 760);
+  // On phones both panels start closed so the car stays visible, and only one opens at a time.
+  const [controlsOpen, setControlsOpen] = useState(() => !isPhone());
+  const [detailsOpen, setDetailsOpen] = useState(() => !isPhone());
+  const toggleControls = () => {
+    const next = !controlsOpen;
+    setControlsOpen(next);
+    if (next && isPhone()) setDetailsOpen(false);
+  };
+  const toggleDetails = () => {
+    const next = !detailsOpen;
+    setDetailsOpen(next);
+    if (next && isPhone()) setControlsOpen(false);
+  };
 
   const viewportRef = useRef(null);
   const opts = useRef({ overlay, trail, camera, clearTrail: false });
@@ -141,6 +156,24 @@ export default function App() {
       <div ref={viewportRef} className="viewport" />
 
       <div className="hud-left">
+        <div className="mini-hud">
+          <span className={`badge-dot ${statusClass}`} title={statusText} />
+          {!detailsOpen && t?.own && (
+            <span className="mini-read">
+              <b>{Math.round(Math.abs(t.own.speed) * 3.6)}</b> km/h
+              <span className="mini-steer">
+                <span className="mini-sep">·</span>
+                δ {(t.own.steer * 180 / Math.PI).toFixed(0)}°
+              </span>
+              <span className="mini-sep">·</span>
+              R {Number.isFinite(t.own.radius) && Math.abs(t.own.radius) < 999 ? `${Math.abs(t.own.radius).toFixed(1)} m` : '∞'}
+            </span>
+          )}
+          <button className="mini-toggle" onClick={toggleDetails} aria-expanded={detailsOpen}>
+            {detailsOpen ? 'Hide' : 'Data'}
+          </button>
+        </div>
+        <div className={`details${detailsOpen ? ' open' : ''}`}>
         <section className="panel status">
           <div className="brand">
             <span className="brand-mark" aria-hidden="true" />
@@ -158,11 +191,12 @@ export default function App() {
           </dl>
         </section>
         <Telemetry t={t} />
+        </div>
       </div>
 
       <div className="hud-right">
-        <button className="panel-toggle" onClick={() => setControlsOpen((o) => !o)} aria-expanded={controlsOpen}>
-          {controlsOpen ? 'Hide controls' : 'Controls'}
+        <button className="panel-toggle" onClick={toggleControls} aria-expanded={controlsOpen}>
+          {controlsOpen ? (isPhone() ? 'Close' : 'Hide controls') : 'Controls'}
         </button>
         {controlsOpen && (
           <section className="panel controls">

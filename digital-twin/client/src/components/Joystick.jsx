@@ -5,7 +5,8 @@ import { useRef, useCallback } from 'react';
  * Calls onChange({ x, y }) with x ∈ [−1, 1] right-positive and y ∈ [−1, 1]
  * up-positive. Springs back to centre on release, like a real RC transmitter.
  */
-export default function Joystick({ onChange, size = 148, deadzone = 0.08 }) {
+export default function Joystick({ onChange, size: sizeProp, deadzone = 0.08 }) {
+  const size = sizeProp ?? (window.matchMedia('(max-width: 760px), (max-height: 500px)').matches ? 124 : 148);
   const baseRef = useRef(null);
   const knobRef = useRef(null);
   const pointer = useRef(null);
@@ -60,4 +61,5 @@ export default function Joystick({ onChange, size = 148, deadzone = 0.08 }) {
       <div ref={knobRef} className="joystick-knob" />
     </div>
   );
+
 }

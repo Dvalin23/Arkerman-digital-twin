@@ -75,23 +75,25 @@ export class VehicleRig {
 
     // --- chassis -----------------------------------------------------------
     const tubLen = L + 1.1;
-    this.root.add(box(1.15, 0.22, tubLen, darkMat, 0, 0.42, L / 2));                // floor pan
-    this.root.add(box(1.25, 0.3, tubLen - 0.3, bodyMat, 0, 0.66, L / 2));            // body shell
-    this.root.add(box(1.25, 0.18, 0.7, bodyMat, 0, 0.6, L + 0.42));                  // nose
+    // body width follows the track so the wheels stay clear of the body
+    const bw = Math.min(1.6, Math.max(0.6, params.track - 0.4));
+    this.root.add(box(bw - 0.1, 0.22, tubLen, darkMat, 0, 0.42, L / 2));                // floor pan
+    this.root.add(box(bw, 0.3, tubLen - 0.3, bodyMat, 0, 0.66, L / 2));            // body shell
+    this.root.add(box(bw, 0.18, 0.7, bodyMat, 0, 0.6, L + 0.42));                  // nose
     const glass = new THREE.MeshStandardMaterial({ color: '#0b1220', roughness: 0.1, metalness: 0.6, transparent: true, opacity: 0.85 });
-    this.root.add(box(1.05, 0.42, 1.2, glass, 0, 1.02, L / 2 - 0.15));              // cabin
-    this.root.add(box(0.95, 0.22, 0.8, darkMat, 0, 0.92, -0.05));                    // battery pack
+    this.root.add(box(bw - 0.2, 0.42, Math.min(1.2, L * 0.46), glass, 0, 1.02, L / 2 - 0.15));              // cabin
+    this.root.add(box(bw - 0.3, 0.22, 0.8, darkMat, 0, 0.92, -0.05));                    // battery pack
     // roll hoop
-    for (const s of [-1, 1]) this.root.add(box(0.06, 0.55, 0.06, metalMat, s * 0.55, 1.05, L / 2 - 0.8));
-    this.root.add(box(1.16, 0.06, 0.06, metalMat, 0, 1.32, L / 2 - 0.8));
+    for (const s of [-1, 1]) this.root.add(box(0.06, 0.55, 0.06, metalMat, s * (bw / 2 - 0.07), 1.05, L / 2 - 0.8));
+    this.root.add(box(bw - 0.09, 0.06, 0.06, metalMat, 0, 1.32, L / 2 - 0.8));
 
     // lights
     const head = new THREE.MeshStandardMaterial({ color: '#fff7d6', emissive: '#fff2b0', emissiveIntensity: 1.2 });
     const tail = new THREE.MeshStandardMaterial({ color: '#ff3b30', emissive: '#ff1a10', emissiveIntensity: 0.6 });
     this.tailMat = tail;
     for (const s of [-1, 1]) {
-      this.root.add(box(0.26, 0.08, 0.04, head, s * 0.4, 0.64, L + 0.78));
-      this.root.add(box(0.22, 0.08, 0.04, tail, s * 0.45, 0.7, -0.53));
+      this.root.add(box(0.26, 0.08, 0.04, head, s * bw * 0.32, 0.64, L + 0.78));
+      this.root.add(box(0.22, 0.08, 0.04, tail, s * bw * 0.36, 0.7, -0.53));
     }
 
     // lidar mast — spins so you can see the twin is "alive"

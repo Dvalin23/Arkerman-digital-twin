@@ -197,12 +197,26 @@ export class Engine {
     this.camera.updateProjectionMatrix();
   }
 
+  paramsFor(v) {
+    const base = this.link.params;
+    if (v.wb == null || v.tr == null) return base;
+    return { ...base, wheelbase: v.wb, track: v.tr };
+  }
+
   syncRigs(vehicles) {
     const ownId = this.link.id;
     for (const [id, v] of vehicles) {
       let rig = this.rigs.get(id);
+      const p = this.paramsFor(v);
+      if (rig && (rig.p.wheelbase !== p.wheelbase || rig.p.track !== p.track)) {
+        // size changed: rebuild the rover around the new geometry
+        this.scene.remove(rig.root);
+        rig.dispose();
+        this.rigs.delete(id);
+        rig = null;
+      }
       if (!rig) {
-        rig = new VehicleRig(this.link.params, v.color, { withOverlay: id === ownId });
+        rig = new VehicleRig(p, v.color, { withOverlay: id === ownId });
         rig.isOwn = id === ownId;
         this.rigs.set(id, rig);
         this.scene.add(rig.root);
@@ -294,9 +308,11 @@ export class Engine {
       params: link.params,
     };
     if (!own) { this.onTelemetry({ ...base, own: null }); return; }
-    const d = derive({ speed: own.v, steer: own.d }, link.params, own.a ?? 1);
+    const p = this.paramsFor(own);
+    const d = derive({ speed: own.v, steer: own.d }, p, own.a ?? 1);
     this.onTelemetry({
       ...base,
+      params: p,
       own: {
         name: own.name,
         color: own.color,

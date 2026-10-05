@@ -67,6 +67,7 @@ export class WsLink extends Emitter {
         this.setStatus('online');
         this.emit('welcome', m);
         if (this.ackermann != null) this.send({ t: 'cfg', ackermann: this.ackermann });
+        if (this.geometry) this.send({ t: 'cfg', ...this.geometry });
       } else if (m.t === 'pong') this.rtt = smooth(this.rtt, now - m.c);
     };
     ws.onclose = () => { this.ws = null; this.setStatus('offline'); this.scheduleReconnect(); };
@@ -87,6 +88,7 @@ export class WsLink extends Emitter {
 
   sendInput(throttle, steer) { this.send({ t: 'in', seq: ++this.seq, th: +throttle.toFixed(3), st: +steer.toFixed(3) }); }
   setAckermann(p) { this.ackermann = p; this.send({ t: 'cfg', ackermann: p }); }
+  setGeometry(wheelbase, track) { this.geometry = { wheelbase, track }; this.send({ t: 'cfg', wheelbase, track }); }
   reset() { this.send({ t: 'reset' }); }
 
   close() {
@@ -156,6 +158,7 @@ export class LocalLink extends Emitter {
     this.later(() => this.world.setInput(this.id, seq, throttle, steer));
   }
   setAckermann(p) { this.later(() => this.world.setConfig(this.id, { ackermann: p })); }
+  setGeometry(wheelbase, track) { this.later(() => this.world.setConfig(this.id, { wheelbase, track })); }
   reset() { this.later(() => this.world.reset(this.id)); }
 
   close() {

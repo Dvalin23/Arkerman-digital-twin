@@ -42,6 +42,10 @@ test('client joins, drives forward, sees itself in snapshots, gets pong', async 
     const cfg = await nextMessage(ws, (m) => m.t === 'snap' && m.vehicles.some((v) => v.id === welcome.id && v.a === 0.25));
     assert.ok(cfg);
 
+    ws.send(JSON.stringify({ t: 'cfg', wheelbase: 3.4, track: 2.0 }));
+    const geo = await nextMessage(ws, (m) => m.t === 'snap' && m.vehicles.some((v) => v.id === welcome.id && v.wb === 3.4 && v.tr === 2.0));
+    assert.ok(geo, 'snapshot carries the new size');
+
     // stop sending → failsafe engages within ~500 ms
     const fs = await nextMessage(ws, (m) => m.t === 'snap' && m.vehicles.find((v) => v.id === welcome.id)?.fs === 1);
     assert.ok(fs);

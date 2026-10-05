@@ -4,6 +4,8 @@ import Telemetry from './components/Telemetry.jsx';
 import { Engine } from './lib/engine.js';
 import { WsLink, LocalLink } from './lib/link.js';
 import { INPUT_HZ } from '../../shared/protocol.js';
+import { SIZE_LIMITS } from '../../shared/world.js';
+import { DEFAULT_PARAMS } from '../../shared/ackermann.js';
 
 
 const ENV = import.meta.env || {};
@@ -43,6 +45,8 @@ export default function App() {
   const [camera, setCamera] = useState('chase');
   const [ackermann, setAckermann] = useState(1);
   const [latency, setLatency] = useState(60);
+  const [wheelbase, setWheelbase] = useState(DEFAULT_PARAMS.wheelbase);
+  const [track, setTrack] = useState(DEFAULT_PARAMS.track);
   // On phones both panels start closed so the car stays visible, and only one opens at a time.
   const [controlsOpen, setControlsOpen] = useState(() => !isPhone());
   const [detailsOpen, setDetailsOpen] = useState(() => !isPhone());
@@ -87,6 +91,7 @@ export default function App() {
 
   useEffect(() => { link?.setLatency?.(latency); }, [link, latency]);
   useEffect(() => { link?.setAckermann(ackermann); }, [link, ackermann]);
+  useEffect(() => { link?.setGeometry?.(wheelbase, track); }, [link, wheelbase, track]);
 
   // ---- 3D engine --------------------------------------------------------------
   useEffect(() => {
@@ -220,6 +225,37 @@ export default function App() {
                 <span>{Math.round(ackermann * 100)}%</span>
                 <span className="muted">{ackermannLabel(ackermann)}</span>
               </div>
+            </div>
+
+            <div className="field">
+              <span className="label">Vehicle size</span>
+              <div className="size-row">
+                <label htmlFor="wheelbase">Wheelbase</label>
+                <input
+                  id="wheelbase" type="range" step={0.1}
+                  min={SIZE_LIMITS.wheelbase.min} max={SIZE_LIMITS.wheelbase.max} value={wheelbase}
+                  onChange={(e) => setWheelbase(Number(e.target.value))}
+                />
+                <span className="size-val">{wheelbase.toFixed(1)} m</span>
+              </div>
+              <div className="size-row">
+                <label htmlFor="track">Track</label>
+                <input
+                  id="track" type="range" step={0.1}
+                  min={SIZE_LIMITS.track.min} max={SIZE_LIMITS.track.max} value={track}
+                  onChange={(e) => setTrack(Number(e.target.value))}
+                />
+                <span className="size-val">{track.toFixed(1)} m</span>
+              </div>
+              <div className="range-meta">
+                <span>W/L {(track / wheelbase).toFixed(2)}</span>
+                <span className="muted">tightest turn {(wheelbase / Math.tan(DEFAULT_PARAMS.maxSteer)).toFixed(1)} m</span>
+              </div>
+              {(wheelbase !== DEFAULT_PARAMS.wheelbase || track !== DEFAULT_PARAMS.track) && (
+                <button className="btn ghost small-btn" onClick={() => { setWheelbase(DEFAULT_PARAMS.wheelbase); setTrack(DEFAULT_PARAMS.track); }}>
+                  Reset size
+                </button>
+              )}
             </div>
 
             <label className="check"><input type="checkbox" checked={overlay} onChange={(e) => setOverlay(e.target.checked)} /> ICR &amp; axle lines</label>

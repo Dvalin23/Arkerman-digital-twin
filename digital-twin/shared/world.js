@@ -6,6 +6,12 @@ import { FAILSAFE_MS, encodeVehicle } from './protocol.js';
 const COLORS = ['#f97316', '#22d3ee', '#a3e635', '#e879f9', '#facc15', '#60a5fa', '#f87171', '#34d399'];
 const ARENA = 140; 
 
+// Limits for the user-adjustable vehicle size [m]
+export const SIZE_LIMITS = Object.freeze({
+  wheelbase: { min: 1.6, max: 4.5 },
+  track: { min: 1.0, max: 2.4 },
+});
+
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
 export class World {
@@ -29,6 +35,7 @@ export class World {
       lastInput: this.clock(),
       seq: 0,
       ackermann: 1,
+      params: { ...this.params },
       failsafe: false,
       bot,
       spawnIndex: n,
@@ -63,9 +70,14 @@ export class World {
     v.lastInput = this.clock();
   }
 
-  setConfig(id, { ackermann }) {
+  setConfig(id, { ackermann, wheelbase, track }) {
     const v = this.vehicles.get(id);
-    if (v && Number.isFinite(ackermann)) v.ackermann = clamp(ackermann, -1, 1.5);
+    if (!v) return;
+    if (Number.isFinite(ackermann)) v.ackermann = clamp(ackermann, -1, 1.5);
+    const L = SIZE_LIMITS.wheelbase;
+    const W = SIZE_LIMITS.track;
+    if (Number.isFinite(wheelbase)) v.params = { ...v.params, wheelbase: clamp(wheelbase, L.min, L.max) };
+    if (Number.isFinite(track)) v.params = { ...v.params, track: clamp(track, W.min, W.max) };
   }
 
   reset(id) {
@@ -85,7 +97,7 @@ export class World {
         v.failsafe = t - v.lastInput > this.failsafeMs;
         if (v.failsafe) input = { throttle: 0, steer: 0 };
       }
-      step(v.state, input, dt, this.params);
+      step(v.state, input, dt, v.params);
 
      
       const s = v.state;

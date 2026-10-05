@@ -152,3 +152,24 @@ test('speed-sensitive steer limiter keeps lateral acceleration under the grip li
   assert.ok(aLat <= P.maxLatAccel + 1e-6, `a_lat ${aLat}`);
   assert.ok(Math.abs(s.steer) < P.maxSteer, 'lock reduced at speed');
 });
+
+test('vehicle size is per-vehicle, clamped, and changes the turning circle', () => {
+  const world = new World();
+  const a = world.addVehicle('a');
+  const b = world.addVehicle('b');
+  world.setConfig('a', { wheelbase: 4, track: 2 });
+  assert.equal(a.params.wheelbase, 4);
+  assert.equal(a.params.track, 2);
+  assert.equal(b.params.wheelbase, P.wheelbase, 'other vehicles keep their size');
+  world.setConfig('a', { wheelbase: 99, track: 0.1 });
+  assert.equal(a.params.wheelbase, 4.5);
+  assert.equal(a.params.track, 1.0);
+  for (const v of [a, b]) { v.state.steer = 20 * DEG; }
+  assert.ok(turnRadius(a.state.steer, a.params) > turnRadius(b.state.steer, b.params), 'longer car turns wider');
+});
+
+test('wider track needs a bigger inner/outer angle difference', () => {
+  const narrow = wheelAngles(20 * DEG, { ...P, track: 1.0 });
+  const wide = wheelAngles(20 * DEG, { ...P, track: 2.4 });
+  assert.ok(wide.left - wide.right > narrow.left - narrow.right);
+});

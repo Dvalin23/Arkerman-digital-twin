@@ -193,6 +193,10 @@ body {
 }
 .segmented button.on { background: var(--accent); color: var(--accent-ink); }
 input[type="range"] { width: 100%; accent-color: var(--accent); }
+.size-row { display: grid; grid-template-columns: 74px 1fr 52px; align-items: center; gap: 8px; font-size: 13px; }
+.size-row label { color: var(--fg); }
+.size-val { font: 500 12.5px/1 var(--font-data); text-align: right; font-variant-numeric: tabular-nums; }
+.small-btn { align-self: flex-start; padding: 6px 10px; font-size: 12px; }
 .range-meta { display: flex; justify-content: space-between; font: 500 12.5px/1 var(--font-data); gap: 8px; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; }
 .check input { accent-color: var(--accent); width: 16px; height: 16px; }

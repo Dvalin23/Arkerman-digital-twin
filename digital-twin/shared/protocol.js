@@ -20,6 +20,8 @@ export function encodeVehicle(v) {
     v: r3(v.state.speed),
     d: Math.round(v.state.steer * 1e4) / 1e4,
     a: v.ackermann,
+    wb: v.params.wheelbase,
+    tr: v.params.track,
     seq: v.seq,
     fs: v.failsafe ? 1 : 0,
   };
